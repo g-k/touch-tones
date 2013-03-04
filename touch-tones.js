@@ -1,8 +1,13 @@
-// TODO: Karplus-Strong
-// TODO: queue and chain notes?
-// Dial whole phone numbers
+"use strict";
+
+// TODO:
+//
+// queue and chain notes?
 // Dial tone machine / beat box?
-// Frequency and time domain views? D3 for these and buttons?
+// dial whole phone number sound?
+// whistly image (stackoverflow employee eval)?
+//
+// FFT and D3 for frequency and time domain views?
 
 
 var touchToneFreqs = function () {
@@ -20,9 +25,9 @@ var touchToneFreqs = function () {
     lows: [697, 770, 852, 941],
     his: [1209, 1336, 1477, 1633],
     keys: [
-      1,    4,   7,  '*', 
-      2,    5,   8,   0, 
-      3,    6,   9,  '#', 
+      1,    4,   7,  '*',
+      2,    5,   8,   0,
+      3,    6,   9,  '#',
       'A',  'B', 'C', 'D'
     ]
   };
@@ -53,12 +58,13 @@ var DualTone = function (toneMap) {
   this.toneMap = toneMap;
   this.context = new webkitAudioContext();
 
+  this.playing = false;
+
   return this;
 };
 
 DualTone.prototype.disconnect = function () {
   if (this.lowOscillator) {
-    console.log('disconnecting');
     this.lowOscillator.disconnect(0);
     delete this.lowOscillator;
   }
@@ -70,7 +76,8 @@ DualTone.prototype.disconnect = function () {
 };
 
 DualTone.prototype.setFrequencies = function (frequencies) {
-  console.info('setting frequencies', frequencies);
+  console.info('Setting frequencies:', frequencies);
+
   var context = this.context;
 
   this.lowOscillator = context.createOscillator();
@@ -89,10 +96,19 @@ DualTone.prototype.stop = function () {
   this.lowOscillator.stop(0);
   this.highOscillator.stop(0);
 
+  this.disconnect();
+  this.playing = false;
+
   return this;
 };
 
 DualTone.prototype.play = function (key, duration) {
+  if (this.playing) {
+    // Add to queue?
+    console.error('Already playing');
+    return this;
+  }
+
   if (this.toneMap && this.toneMap[key] !== undefined) {
     this.setFrequencies(this.toneMap[key]);
   }
@@ -101,35 +117,67 @@ DualTone.prototype.play = function (key, duration) {
   var lowOscillator = this.lowOscillator.start(0);
   var highOscillator = this.highOscillator.start(0);
 
-  var stop =  function (tone) { 
-    tone.stop().disconnect();
+  var stop =  function (tone) {
+    tone.stop();
   };
+  this.playing = true;
   window.setTimeout(stop, duration, this);
 
   return this;
 };
 
 
-// UI
-var tone = new DualTone(touchToneFreqs());
-tone.play('2');
+// Set up UI
+
+var drawTouchPad = function (keys) {
+  var cellHeight = 88;
+  var cellWidth = 88;
+  var cellMargin = 2;
+
+  var svg = d3.select('#keypad')
+    .append('svg');
+
+  var xPosition = function (value, index) {
+    return (cellWidth + cellMargin) * (index % 4);
+  };
+
+  var yPosition = function (value, index) {
+    return (cellWidth + cellMargin) * (index / 4 | 0);
+  };
+
+  var playTone = function (value) {
+    tone.play(value);
+  };
+
+  var newKeys = svg.selectAll('rect')
+    .data(keys)
+    .enter();
+
+  newKeys = newKeys.append('g')
+    .attr('class', 'button')
+    .attr('x', xPosition)
+    .attr('y', yPosition)
+    .on('click', playTone);
+
+  newKeys.append('rect')
+    .attr('x', xPosition)
+    .attr('y', yPosition)
+    .attr('height', cellHeight)
+    .attr('width', cellWidth);
 
 
-var dialer = document.querySelector('#dialer');
+  newKeys.append('text')
+    .attr('x', function (value, index) {
+      return (cellWidth + cellMargin) * (index % 4) + cellWidth / 2;
+    })
+    .attr('y', function (value, index) {
+      return (cellHeight + cellMargin) * (1+(index / 4 | 0)) - 20;
+    })
+    .text(function (value) { return value; });
 
-var findButton = function (el) {
-  // recurse up to the svg element looking for the data-button value
-  console.log(el, el.dataSet, el.tagName);
-  if (el.dataSet && el.dataSet.button) {
-    return el.dataSet.button;
-  } else if (el.parentNode && el.parentNode.tagName !== 'svg') {
-    return findButton(el.parentNode);
-  } else {
-    return null;
-  }
 };
 
-var hi = function (event) {
-  console.log(this, event, findButton(event.target));
-};
-dialer.addEventListener('click', hi, false);
+drawTouchPad('123A456B789C*0#D'.split(''));
+
+var frequencies = touchToneFreqs();
+var tone = new DualTone(frequencies);
