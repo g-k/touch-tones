@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Touch Tones</title>
+    <style>
+      body {
+        font-family: monospace;
+      }
+      h1 {
+        text-align: center;
+      }
+      .button {
+        cursor: pointer;
+        fill: #6666e6;
+        opacity: 0.8;
+      }
+      .button:hover {
+        opacity: 1.0;
+      }
+      .button text {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        fill: black;
+        font-size: 80px;
+        text-anchor: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Touch Tones</h1>
+
+    <div id="keypad"></div>
+
+    <script src="d3.v3.min.js"></script>
+    <script src="touch-tones.js"></script>
+  </body>
+</html>
