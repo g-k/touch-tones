@@ -136,7 +136,8 @@ var drawTouchPad = function (keys) {
 
   var svg = d3.select('#keypad')
     .append('svg')
-      .attr('width', 4*(cellHeight+cellMargin));
+      .attr('width', 4*(cellHeight+cellMargin))
+      .attr('height', 4*(cellHeight+cellMargin));
 
   var xPosition = function (value, index) {
     return (cellWidth + cellMargin) * (index % 4);
