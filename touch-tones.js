@@ -56,7 +56,7 @@ var DualTone = function (toneMap) {
   }
 
   this.toneMap = toneMap;
-  this.context = new webkitAudioContext();
+  this.context = new AudioContext();
 
   this.playing = false;
 
